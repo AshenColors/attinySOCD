@@ -9,15 +9,15 @@
 //#include <RingEEPROM.h>
 
 //Pin definitions
-#define IP_MODE_SWITCH PB2
+#define IP_MODE_SWITCH PB1
 #define L_IN PB0
-#define R_IN PB1
+#define R_IN PB2
 #define L_OUT PB3
 #define R_OUT PB4
 
-//stored by input pin number, 2 is an error state that gives neutral
-byte initial_input = 2;
-byte input_priority = 2; //0 = L_IN priority, 1 = R_IN priority, 2 = neutral, 3 = last input priority
+//stored by input pin number, 1 is an error state that gives neutral
+byte initial_input = 1;
+byte input_priority = 1; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
 volatile byte button_pressed = 0;
 
 
@@ -38,7 +38,7 @@ void setup()
   pinMode(R_OUT, OUTPUT);
 
   //attach our interrupt
-  //attachInterrupt(digitalPinToInterrupt(IP_MODE_SWITCH), buttonpress, FALLING);
+  attachInterrupt(digitalPinToInterrupt(IP_MODE_SWITCH), buttonpress, FALLING);
 }
 
 void loop()
@@ -70,16 +70,16 @@ void SOCD()
   }
   else if (leftRead == LOW && rightRead == LOW)
   {
-    // switch (input_priority)
-    switch(2)
+    switch (input_priority)
     {
-    case 0:
-    case 1:
-      //write low to the pin corresponding with input priority
-      digitalWrite(input_priority + 3, LOW);
-      digitalWrite((!input_priority) + 3, HIGH);
+    case L_IN:
+      digitalWrite(L_OUT, HIGH);
+      digitalWrite(R_OUT, LOW);
+    case R_IN:
+      digitalWrite(L_OUT, LOW);
+      digitalWrite(R_OUT, HIGH);
       break;
-    case 2:
+    case 1:
       //neutral
       digitalWrite(L_OUT, HIGH);
       digitalWrite(R_OUT, HIGH);
@@ -89,11 +89,13 @@ void SOCD()
       switch (initial_input)
       {
       case L_IN:
+        digitalWrite(L_OUT, LOW);
+        digitalWrite(R_OUT, HIGH);
       case R_IN:
-        digitalWrite(initial_input + 3, HIGH);
-        digitalWrite((!initial_input) + 3, LOW);
+        digitalWrite(L_OUT, HIGH);
+        digitalWrite(R_OUT, LOW);
         break;
-      case 2:
+      case 1:
       default:
         digitalWrite(L_OUT, HIGH);
         digitalWrite(R_OUT, HIGH);
