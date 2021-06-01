@@ -17,7 +17,7 @@
 
 //stored by input pin number, 1 is an error state that gives neutral
 byte initial_input = 1;
-byte input_priority = 3; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
+byte input_priority = 1; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
 volatile byte button_pressed = 0;
 
 
@@ -44,11 +44,10 @@ void setup()
 void loop()
 {
   //initiate configuration if we have a button press
-  // if (button_pressed)
-  // {
-  //   configIPmode();
-  //   button_pressed = 0;
-  // }
+  if (button_pressed)
+  {
+    configIPmode();
+  }
 
   //call the right SOCD function
   SOCD();
@@ -129,68 +128,20 @@ void buttonpress()
 
 void configIPmode()
 {
-  byte basetime = millis();
   while (digitalRead(IP_MODE_SWITCH) == LOW)
   {
-    //freeze until the switch is released, allowing pressing of buttons
+    digitalWrite(L_OUT, digitalRead(L_IN));
+    digitalWrite(R_OUT, digitalRead(R_IN));
   }
-  if (millis() - basetime > 1000) //if held for more than a second
-  {                               //start real configuration
-    byte leftRead = digitalRead(L_IN);
-    byte rightRead = digitalRead(R_IN);
-    if (leftRead == HIGH && rightRead == HIGH) //no input buttons pressed, go to neutral
-      input_priority = 2;
-    else if (leftRead == LOW && rightRead == HIGH)
-      input_priority = 0;
-    else if (leftRead == HIGH && rightRead == LOW)
-      input_priority = 1;
-    else if (leftRead == LOW && rightRead == LOW)
-      input_priority = 3;
-    // byte writeBuffer[PARAM_PACKET_SIZE];
-    // writeBuffer[0] = input_priority;
-    // myeepRom.savePacket(writeBuffer);
-  }
-  showIPmode();
+  byte leftRead = digitalRead(L_IN);
+  byte rightRead = digitalRead(R_IN);
+  if (leftRead == HIGH && rightRead == HIGH) //no input buttons pressed, go to neutral
+    input_priority = 1;
+  else if (leftRead == LOW && rightRead == HIGH)
+    input_priority = L_IN;
+  else if (leftRead == HIGH && rightRead == LOW)
+    input_priority = R_IN;
+  else if (leftRead == LOW && rightRead == LOW)
+    input_priority = 3;
+  button_pressed = 0;
 }
-
-void showIPmode()
-{
-  switch (input_priority)
-  {
-  case 0:
-  case 1: //absolute IP
-    for (byte i = 0, t = 0; i < 6; i++, t = !t)
-    {
-      digitalWrite(input_priority + 3, t);
-      digitalWrite((!input_priority) + 3, HIGH);
-      delay(200);
-    }
-    break;
-  case 2: //neutral IP
-    for (byte i = 0; i < 3; i++)
-    {
-      digitalWrite(L_OUT, LOW);
-      digitalWrite(R_OUT, HIGH);
-      delay(200);
-      digitalWrite(L_OUT, HIGH);
-      digitalWrite(R_OUT, HIGH);
-      delay(200);
-      digitalWrite(L_OUT, HIGH);
-      digitalWrite(R_OUT, LOW);
-      delay(200);
-      digitalWrite(L_OUT, HIGH);
-      digitalWrite(R_OUT, HIGH);
-      delay(200);
-    }
-    break;
-  case 3: //last input priority
-    for (byte i = 0, t = 0; i < 6; i++, t = !t)
-    {
-      digitalWrite(input_priority + 3, t);
-      digitalWrite((!input_priority) + 3, !t);
-      delay(200);
-    }
-    break;
-  }
-}
-
