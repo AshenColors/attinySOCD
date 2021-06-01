@@ -17,7 +17,7 @@
 
 //stored by input pin number, 1 is an error state that gives neutral
 byte initial_input = 1;
-byte input_priority = 1; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
+byte input_priority = 3; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
 volatile byte button_pressed = 0;
 
 
@@ -75,6 +75,7 @@ void SOCD()
     case L_IN:
       digitalWrite(L_OUT, HIGH);
       digitalWrite(R_OUT, LOW);
+      break;
     case R_IN:
       digitalWrite(L_OUT, LOW);
       digitalWrite(R_OUT, HIGH);
@@ -89,17 +90,17 @@ void SOCD()
       switch (initial_input)
       {
       case L_IN:
-        digitalWrite(L_OUT, LOW);
-        digitalWrite(R_OUT, HIGH);
-      case R_IN:
         digitalWrite(L_OUT, HIGH);
         digitalWrite(R_OUT, LOW);
+        break;
+      case R_IN:
+        digitalWrite(L_OUT, LOW);
+        digitalWrite(R_OUT, HIGH);
         break;
       case 1:
       default:
         digitalWrite(L_OUT, HIGH);
         digitalWrite(R_OUT, HIGH);
-        break;
       }
     }
   }
@@ -109,11 +110,14 @@ void SOCD()
     {
       digitalWrite(L_OUT, LOW);
       digitalWrite(R_OUT, HIGH);
-    } else {
+      initial_input = L_IN;
+    } 
+    else if (rightRead == 0) 
+    {
       digitalWrite(L_OUT, HIGH);
       digitalWrite(R_OUT, LOW);
+      initial_input = R_IN;
     }
-    //initial_input = leftRead;
   }
 }
 
