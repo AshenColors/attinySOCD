@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <avr/io.h>
-#include <eewl.h>
+// #include <eewl.h>
 
 //Pin definitions
 #define IP_MODE_SWITCH PB1
@@ -16,15 +16,15 @@
 #define L_OUT PB3
 #define R_OUT PB4
 
-#define BUFFER_START 0x4      // buffer start address
-#define BUFFER_LEN 50         // number of data blocks
+// #define BUFFER_START 0x4      // buffer start address
+// #define BUFFER_LEN 50         // number of data blocks
 
 //stored by input pin number, 1 is an error state that gives neutral
 byte initial_input = 1;
 byte input_priority = 1; //0 = L_IN priority, 2 = R_IN priority, 1 = neutral, 3 = last input priority
 volatile byte button_pressed = 0;
 
-EEWL eepromIPconfig(input_priority, BUFFER_LEN, BUFFER_START);
+// EEWL eepromIPconfig(input_priority, BUFFER_LEN, BUFFER_START);
 
 void SOCD(); //main socd-handling function
 void configIPmode(); //does the configuration
@@ -42,8 +42,11 @@ void setup()
   DDRB = (1 << L_OUT) | (1 << R_OUT);
   PORTB =  (1 << L_IN) | (1 << R_IN) | (1<<IP_MODE_SWITCH);
 
-  //set IP mode from eeprom
-  eepromIPconfig.get(input_priority);
+  //set IP mode from eeprom, or force a fake button push on boot
+  // if (!(eepromIPconfig.get(input_priority)))
+  // {
+      button_pressed = 1;
+  // }
 
   //attach our interrupt
   attachInterrupt(digitalPinToInterrupt(IP_MODE_SWITCH), buttonpress, FALLING);
@@ -156,7 +159,7 @@ void configIPmode()
     input_priority = R_IN;
   else if (leftRead == LOW && rightRead == LOW)
     input_priority = 3;
-  eepromIPconfig.put(input_priority);
+  // eepromIPconfig.put(input_priority);
   initial_input = 1;
   button_pressed = 0;
 }
