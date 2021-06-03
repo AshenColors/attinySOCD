@@ -25,73 +25,10 @@ volatile uint8_t button_pressed = 0;
 
 uint8_t NVBLKPOS; //eeprom last byte position
 
-void SOCD();         //main socd-handling function
-void configIPmode(); //does the configuration
-
-void lastnv()
-{
-  uint8_t sentinel;
-  uint8_t i;
-  NVBLKPOS = 0;
-  sentinel = eeprom_read_byte((const uint8_t *)SENOFF) & SENBIT;
-  i = 0;
-  while (i < EEPOOLSIZE)
-  {
-    if ((eeprom_read_byte((const uint8_t *)i + SENOFF) & SENBIT) != sentinel)
-      break;
-    NVBLKPOS = i;
-    i += sizeof(input_priority);
-  }
-}
-
-void readnv()
-{
-  uint8_t *p;
-  uint8_t i;
-  p = (uint8_t *)&input_priority;
-  for (i = 0; i < sizeof(input_priority); i++)
-  {
-    (*p) = eeprom_read_byte((const uint8_t *)NVBLKPOS + i);
-    if (i == SENOFF)
-      (*p) &= ~SENBIT;
-    p++;
-  }
-}
-
-void nextnv()
-{
-  NVBLKPOS += sizeof(input_priority);
-  if (NVBLKPOS >= EEPOOLSIZE)
-    NVBLKPOS = 0;
-}
-
-void writenv()
-{
-  uint8_t i;
-  uint8_t sentinel;
-  uint8_t *p;
-  p = (uint8_t *)&input_priority;
-  lastnv();
-  nextnv();
-  sentinel = eeprom_read_byte((const uint8_t *)SENOFF) & SENBIT;
-  if (!NVBLKPOS)
-    sentinel ^= SENBIT;
-  for (i = 0; i < sizeof(input_priority); i++)
-  {
-    if (i != SENOFF)
-      eeprom_update_byte((uint8_t *)NVBLKPOS + i, *(p + i));
-  }
-  i = (*(p + SENOFF) & (~SENBIT)) | sentinel;
-  eeprom_update_byte((uint8_t *)NVBLKPOS + SENOFF, i);
-}
-
-void initcheck(void)
-{
-  if (input_priority == ~0x00 || input_priority == ~0x80)
-  {
-    input_priority = 1; // default value
-  }
-}
+void setup();
+void SOCD();
+void configIPmode();
+void lastnv(), nextnv(), readnv(), writenv(), initcheck();
 
 void setup()
 {
@@ -222,4 +159,70 @@ void configIPmode()
   writenv();
   initial_input = 1;
   button_pressed = 0;
+}
+
+//EEPROM handling code here
+void lastnv()
+{
+  uint8_t sentinel;
+  uint8_t i;
+  NVBLKPOS = 0;
+  sentinel = eeprom_read_byte((const uint8_t *)SENOFF) & SENBIT;
+  i = 0;
+  while (i < EEPOOLSIZE)
+  {
+    if ((eeprom_read_byte((const uint8_t *)i + SENOFF) & SENBIT) != sentinel)
+      break;
+    NVBLKPOS = i;
+    i += sizeof(input_priority);
+  }
+}
+
+void readnv()
+{
+  uint8_t *p;
+  uint8_t i;
+  p = (uint8_t *)&input_priority;
+  for (i = 0; i < sizeof(input_priority); i++)
+  {
+    (*p) = eeprom_read_byte((const uint8_t *)NVBLKPOS + i);
+    if (i == SENOFF)
+      (*p) &= ~SENBIT;
+    p++;
+  }
+}
+
+void nextnv()
+{
+  NVBLKPOS += sizeof(input_priority);
+  if (NVBLKPOS >= EEPOOLSIZE)
+    NVBLKPOS = 0;
+}
+
+void writenv()
+{
+  uint8_t i;
+  uint8_t sentinel;
+  uint8_t *p;
+  p = (uint8_t *)&input_priority;
+  lastnv();
+  nextnv();
+  sentinel = eeprom_read_byte((const uint8_t *)SENOFF) & SENBIT;
+  if (!NVBLKPOS)
+    sentinel ^= SENBIT;
+  for (i = 0; i < sizeof(input_priority); i++)
+  {
+    if (i != SENOFF)
+      eeprom_update_byte((uint8_t *)NVBLKPOS + i, *(p + i));
+  }
+  i = (*(p + SENOFF) & (~SENBIT)) | sentinel;
+  eeprom_update_byte((uint8_t *)NVBLKPOS + SENOFF, i);
+}
+
+void initcheck(void)
+{
+  if (input_priority == ~0x00 || input_priority == ~0x80)
+  {
+    input_priority = 1; // default value
+  }
 }
