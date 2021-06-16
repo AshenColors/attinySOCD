@@ -1,4 +1,4 @@
-// microcore SOCD cleaner
+// attiny SOCD cleaner
 // a project by ashen_blue
 
 #include <avr/io.h>
