@@ -161,7 +161,17 @@ void configIPmode()
   button_pressed = 0;
 }
 
-//EEPROM handling code here
+void initcheck(void)
+{
+  if (input_priority == ~0x00 || input_priority == ~0x80)
+  {
+    input_priority = 1; // default value
+  }
+}
+
+// EEPROM handling code past this point. input_priority is hardcoded
+// as the variable to use 'cause I'm scared of trying to make this into a library
+// and getting this to work at the same time.
 void lastnv()
 {
   uint8_t sentinel;
@@ -217,12 +227,4 @@ void writenv()
   }
   i = (*(p + SENOFF) & (~SENBIT)) | sentinel;
   eeprom_update_byte((uint8_t *)NVBLKPOS + SENOFF, i);
-}
-
-void initcheck(void)
-{
-  if (input_priority == ~0x00 || input_priority == ~0x80)
-  {
-    input_priority = 1; // default value
-  }
 }
